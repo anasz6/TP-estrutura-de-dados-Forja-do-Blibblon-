@@ -1,0 +1,37 @@
+E L
+A 0
+A 1
+A 2
+I 0
+I 1
+I 2
+I 3
+M MachadoGenerico Forca 5
+M BarbaPosticaDePrestigio Carisma 7
+M BarbaPosticaDePrestigio Furtividade -3
+M BotasSilenciosas Furtividade 4
+M ElmoDoPrimo Forca 2
+M ElmoDoPrimo Carisma 2
+H 0
+H 1
+LI BarbaPosticaDePrestigio atributo_1 1 7 atributo_2 2 -3
+LA Furtividade item_1 1 -3 item_2 2 4
+F 1
+F 2
+F 3
+Z 2
+encomenda_1 0 0 encomenda_2 1 1
+LH Blibblon atributo_1 0 5
+LH Grunilda atributo_1 1 7 atributo_2 2 -3
+Q 1 3 10.00
+Q 2 1 9.00
+Q 3 2 5.00
+D Blibblon MachadoGenerico
+LH Blibblon VAZIO
+E T
+Z 1
+encomenda_1 0 3
+LH Blibblon atributo_1 0 2 atributo_2 1 2
+Q 1 0 8.00
+Q 2 3 8.00
+Q 3 2 6.00
