@@ -62,7 +62,7 @@ class VetorDinamico {
     } 
     tam = novoTam;
   }
-
+//não sei por que é assim , ENTENDER
   long long bytesReservados() const {
     return (long long)cap * sizeof(T);
   }
