@@ -1,23 +1,25 @@
 #include "forja.h"
+#include "metricas.h"
 
-#include <cstdlib>   // strtoll
+#include <cstdlib>   // strtoll, strtod
 #include <cstdio>    // printf
 #include <cstring>   // strcmp
+#include <cmath>     // round
 
 static char* proximoToken(char*& p) {
   while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') {
-    p++;                                   // 1) pula os separadores do começo
+    p++;                                  
   }
   if (*p == '\0') {
-    return nullptr;                        // a linha acabou sem palavra
+    return nullptr;                        
   }
-  char* inicio = p;                        // 2) guarda onde a palavra começa
+  char* inicio = p;                       
   while (*p != '\0' && *p != ' ' && *p != '\t' && *p != '\r' && *p != '\n') {
-    p++;                                   // 3) anda até o fim da palavra
+    p++;                                   
   }
   if (*p != '\0') {
-    *p = '\0';                             // 4) fecha a palavra com '\0'
-    p++;                                   // 5) avança para depois dela
+    *p = '\0';                            
+    p++;                                  
   }
   return inicio;
 }
@@ -25,11 +27,18 @@ static char* proximoToken(char*& p) {
 static long long lerInteiro(char*& p) {
   char* t = proximoToken(p);
   if (t == nullptr) return 0;
-  return strtoll(t, nullptr, 10);          // entende o sinal negativo
+  return strtoll(t, nullptr, 10);          
+}
+
+static double lerDouble(char*& p) {
+  char* t = proximoToken(p);
+  if (t == nullptr) return 0.0;
+  return strtod(t, nullptr);
 }
 
 Forja::Forja() {
-  algoritmo = ALG_INSERTION;
+  algoritmo = ALG_QUICK;
+  comparacoesOrdenacao = 0;
 }
 
 Forja::~Forja() {
@@ -46,6 +55,10 @@ Forja::~Forja() {
 
 void Forja::setAlgoritmo(Algoritmo a) {
   algoritmo = a;
+}
+
+long long Forja::getComparacoesOrdenacao() const {
+  return comparacoesOrdenacao;
 }
 
 void Forja::executa(char* linha) {
@@ -190,16 +203,18 @@ void Forja::cmdZ(char* resto) {
   }
 
   printf("Z %d\n", processadas.tamanho());
-  bool primeiro = true;
-  for (int i = 0; i < processadas.tamanho(); i++) {
-    if (!primeiro) {
-      printf(" ");
+  if (processadas.tamanho() > 0) {
+    bool primeiro = true;
+    for (int i = 0; i < processadas.tamanho(); i++) {
+      if (!primeiro) {
+        printf(" ");
+      }
+      printf("encomenda_%d %d %d", cont, processadas[i].aventureiro, processadas[i].item);
+      primeiro = false;
+      cont++;
     }
-    printf("encomenda_%d %d %d", cont, processadas[i].aventureiro, processadas[i].item);
-    primeiro = false;
-    cont++;
+    printf("\n");
   }
-  printf("\n");
 }
 
 void Forja::cmdD(char* resto) {
@@ -211,6 +226,10 @@ void Forja::cmdD(char* resto) {
       std::string nomeAv = av->getnome();
       std::string nomeItem = itens[item_desequipado]->getnome();
       printf("D %s %s\n", nomeAv.c_str(), nomeItem.c_str());
+      return;
+    } else {
+      std::string nomeAv = av->getnome();
+      printf("D %s VAZIO\n", nomeAv.c_str());
       return;
     }
   }
@@ -260,6 +279,117 @@ void Forja::cmdLH(char* resto) {
 }
 
 void Forja::cmdQ(char* resto) {
-  // Ignorado / corpo vazio (depende dos algoritmos de ordenação)
-  (void)resto;
+  int av_id = lerInteiro(resto);
+  int n_itens = lerInteiro(resto);
+  int m_metricas = lerInteiro(resto);
+
+  int N = itens.tamanho();
+  int T = atributos.tamanho();
+  if (N <= 0) return;
+
+  Aventureiro* av = (av_id >= 0 && av_id < aventureiros.tamanho()) ? aventureiros[av_id] : nullptr;
+  if (av == nullptr) return;
+
+  VetorDinamico<long long> build;
+  calculaBuild(av, build);
+
+  // Vetor com a pontuação final ponderada de cada item (em ponto flutuante e chave com escala)
+  double* pontuacaoFinal = new double[N];
+  for (int i = 0; i < N; i++) {
+    pontuacaoFinal[i] = 0.0;
+  }
+
+  // Arrays auxiliares para as ordenações das métricas
+  long long* chaveMetrica = new long long[N];
+  int* ordem = new int[N];
+  int* aux = new int[N];
+
+  for (int m = 0; m < m_metricas; m++) {
+    char* nomeMetrica = proximoToken(resto);
+    double peso = lerDouble(resto);
+
+    if (nomeMetrica == nullptr) continue;
+
+    if (strcmp(nomeMetrica, "PODER") == 0) {
+      calculaPoder(catalogo, N, chaveMetrica);
+    } else if (strcmp(nomeMetrica, "EQUILIBRIO") == 0) {
+      calculaEquilibrio(catalogo, N, T, chaveMetrica);
+    } else if (strcmp(nomeMetrica, "SINERGIA") == 0) {
+      calculaSinergia(catalogo, N, T, build.tamanho() > 0 ? &build[0] : nullptr, chaveMetrica);
+    }
+
+    // Inicializa a ordem com [0, 1, ..., N-1]
+    for (int i = 0; i < N; i++) {
+      ordem[i] = i;
+    }
+
+    // Ordena de forma global todo o catálogo
+    ContOrd cOrd{0};
+    ordena(algoritmo, ordem, N, chaveMetrica, aux, cOrd);
+    comparacoesOrdenacao += cOrd.comparacoes;
+
+    // O item na i-ésima posição (0-indexed) recebe N - i pontos
+    for (int i = 0; i < N; i++) {
+      int itemId = ordem[i];
+      int pontosPosicao = N - i;
+      pontuacaoFinal[itemId] += peso * pontosPosicao;
+    }
+  }
+
+  // Mapeia quais itens o aventureiro tem atualmente equipados
+  bool* equipado = new bool[N];
+  for (int i = 0; i < N; i++) {
+    equipado[i] = false;
+  }
+  for (int e = 0; e < av->numEquipados(); e++) {
+    int it = av->itemEquipado(e);
+    if (it >= 0 && it < N) {
+      equipado[it] = true;
+    }
+  }
+
+  // Filtra apenas os itens candidatos (não equipados)
+  int numCandidatos = 0;
+  for (int i = 0; i < N; i++) {
+    if (!equipado[i]) {
+      numCandidatos++;
+    }
+  }
+
+  if (numCandidatos > 0) {
+    int* candidatos = new int[numCandidatos];
+    long long* chavesPontuacao = new long long[N];
+    int* auxCandidatos = new int[numCandidatos];
+
+    for (int i = 0; i < N; i++) {
+      chavesPontuacao[i] = static_cast<long long>(std::round(pontuacaoFinal[i] * 1e6));
+    }
+
+    int idx = 0;
+    for (int i = 0; i < N; i++) {
+      if (!equipado[i]) {
+        candidatos[idx++] = i;
+      }
+    }
+
+    ContOrd cOrd{0};
+    ordena(algoritmo, candidatos, numCandidatos, chavesPontuacao, auxCandidatos, cOrd);
+    comparacoesOrdenacao += cOrd.comparacoes;
+
+    int limite = n_itens < numCandidatos ? n_itens : numCandidatos;
+    for (int r = 0; r < limite; r++) {
+      int itemId = candidatos[r];
+      printf("Q %d %d %.2f\n", r + 1, itemId, pontuacaoFinal[itemId]);
+    }
+
+    delete[] candidatos;
+    delete[] chavesPontuacao;
+    delete[] auxCandidatos;
+  }
+
+  delete[] equipado;
+  delete[] pontuacaoFinal;
+  delete[] chaveMetrica;
+  delete[] ordem;
+  delete[] aux;
 }

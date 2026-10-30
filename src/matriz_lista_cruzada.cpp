@@ -128,16 +128,15 @@ long long MatrizListaCruzada::getvalor(int i, int a){
   }
 //também sem proteção contra índice fora do vetor
   void MatrizListaCruzada::remove(int i, int a){
-    
        No* auxiliar = cabecaLinha[i];
        No* antAuxiliar = nullptr;
-       if( auxiliar == nullptr){
-        return;
-       }
 
-       while(auxiliar!= nullptr && auxiliar->atributo != a){
+       while(auxiliar != nullptr && auxiliar->atributo != a){
         antAuxiliar = auxiliar;
         auxiliar = auxiliar->proxLinha;
+       }
+       if(auxiliar == nullptr){
+        return;
        }
        if  (antAuxiliar== nullptr){
         cabecaLinha[i] = auxiliar->proxLinha;

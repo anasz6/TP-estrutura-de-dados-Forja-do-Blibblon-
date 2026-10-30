@@ -128,20 +128,19 @@ void Catalogo::trocaModo(Modo novo){
     matrizL.cresceAtributos(numAtributos);
     matrizL.cresceItens(numItens);
     matrizL.iniciaConstrucao();
-    Celula auxiliar;
-    for(int p = 0; p<matrizL.numCelulas()-1;p++){
-        auxiliar = matrizT.celulaEm(p);
-        matrizL.anexaOrdenado(auxiliar.item,auxiliar.atributo,auxiliar.valor);
+    for(int p = 0; p < matrizT.numCelulas(); p++){
+        Celula auxiliar = matrizT.celulaEm(p);
+        matrizL.anexaOrdenado(auxiliar.item, auxiliar.atributo, auxiliar.valor);
     }
     matrizL.finalizaConstrucao();
     matrizT.limpa();
   } else {
     matrizT.limpa();
     Cursor c;
-    for(int p = 0; p < numItens-1; p++){
+    for(int p = 0; p < numItens; p++){
        c = matrizL.iniciaLinha(p);
        Celula saida;
-       while(matrizL.andaLinha(c,saida)){
+       while(matrizL.andaLinha(c, saida)){
            matrizT.adicionaNoFim(saida);
        }
     }

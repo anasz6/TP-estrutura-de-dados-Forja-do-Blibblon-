@@ -1,2 +1,13 @@
 bin/*
 obj/*
+relatorio.tex
+*.pdf
+*.bbl
+*.blg
+*.aux
+*.log
+*.synctex.gz
+aaai*.sty
+aaai*.bst
+relatorio/
+tp1.zip

@@ -15,6 +15,7 @@ class Forja {
   ~Forja();
   void executa(char* linha);
   void setAlgoritmo(Algoritmo a);
+  long long getComparacoesOrdenacao() const;
 
  private:
   VetorDinamico<Atributo*> atributos;
@@ -23,6 +24,7 @@ class Forja {
   Fila fila;
   Catalogo catalogo;
   Algoritmo algoritmo;
+  long long comparacoesOrdenacao;
 
   void cmdE(char* resto);
   void cmdA(char* resto);

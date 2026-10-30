@@ -1,31 +1,39 @@
 #include "matriz_tripletas.h"
 #include "celula.h"
 
-//MUDAR PARA BUSCA BINARIA DEPOIS
-int MatrizTripletas::buscaPos(int i, int a, bool& achou) const{
-    achou = false;  
-    int j;
-    for(j = 0; j<v_.tamanho();j++){
-       if(v_[j].item <i || (v_[j].item == i && v_[j].atributo<=a)){
-          if(v_[j].item==i && v_[j].atributo==a){
-            achou = true;
-            return j;
-          }
-       } else {
-        return j;
-       }
-      }
-    return j;
-}
+int MatrizTripletas::buscaPos(int i, int a, bool& achou) const {
+    achou = false;
+    int esq = 0;
+    int dir = v_.tamanho();
 
-int MatrizTripletas::primeiroComItemMaiorOuIgual(int i) const{
-    int j;
-    for( j=0; j<v_.tamanho();j++){
-        if(v_[j].item>=i){
-            break;
+    while (esq < dir) {
+        int meio = esq + (dir - esq) / 2;
+        if (v_[meio].item < i || (v_[meio].item == i && v_[meio].atributo < a)) {
+            esq = meio + 1;
+        } else {
+            dir = meio;
         }
     }
-    return j;
+
+    if (esq < v_.tamanho() && v_[esq].item == i && v_[esq].atributo == a) {
+        achou = true;
+    }
+    return esq;
+}
+
+int MatrizTripletas::primeiroComItemMaiorOuIgual(int i) const {
+    int esq = 0;
+    int dir = v_.tamanho();
+
+    while (esq < dir) {
+        int meio = esq + (dir - esq) / 2;
+        if (v_[meio].item < i) {
+            esq = meio + 1;
+        } else {
+            dir = meio;
+        }
+    }
+    return esq;
 }
 
 long long MatrizTripletas::getvalor(int i, int a){
@@ -60,11 +68,17 @@ long long MatrizTripletas::getvalor(int i, int a){
     }
  }
 
-  Cursor MatrizTripletas::iniciaLinha(int i){
+MatrizTripletas::MatrizTripletas() {
+    percorridas = 0;
+}
+
+Cursor MatrizTripletas::iniciaLinha(int i){
     Cursor a;
     a.idx = primeiroComItemMaiorOuIgual(i);
     a.fim = primeiroComItemMaiorOuIgual(i+1);
-  }
+    a.no = nullptr;
+    return a;
+}
 
 bool MatrizTripletas::andaLinha(Cursor& c, Celula& saida){
         if(c.idx < c.fim){
@@ -146,7 +160,7 @@ Celula MatrizTripletas::celulaEm(int pos) const{
 }
 
 long long MatrizTripletas::bytesUsados() const{
-        v_.bytesReservados();
+    return v_.bytesReservados();
 }
 
 long long MatrizTripletas::celulasPercorridas() const{
