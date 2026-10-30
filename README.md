@@ -43,4 +43,4 @@ Os testes de cada estrutura (vetor, fila, pilha e entidades) ficam em `testes/`.
 
 ## Autoria
 
-Seu nome
+Ana Soza
